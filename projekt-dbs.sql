@@ -36,12 +36,9 @@ CREATE SCHEMA Vyucujici_Schema AUTHORIZATION Vyucujici_Role;
 GO
 CREATE SCHEMA REF AUTHORIZATION REFperm;
 GO
-
 --Práva rolí
 GRANT ALTER ON SCHEMA :: REF to REFperm;
 GO 
---Vytvoření aplikačních rolí
-
 -- Vytvoření tabulek
 CREATE TABLE Fakulta
 (
@@ -271,20 +268,19 @@ VALUES ('Ing.','Ph.D','Petr','Dydowicz',5,1),('Doc. Ing. et Ing.','Ph.D.','Stani
 INSERT INTO Vyucujici(VYtitul_pred,VYtitul_za,VYjmeno,VYprijmeni) 
 VALUES ('Ing.','PhD.','Petr','Novák');
 GO
--- Procedury
-/*CREATE PROCEDURE spPlatba
+-- Procedury pro Referentku
+CREATE PROCEDURE Platba
 AS
 BEGIN
 	SELECT STjmeno AS jméno,STprijmeni AS příjmení,PLdatum AS datum,UPnazev AS název,UPcastka AS částka,REFprijmeni AS referentka FROM REF.Student,REF.Platba,REF.Ucel_platby,REF.Referentka
 END;
 GO
-
-CREATE PROCEDURE spNeplatici
+CREATE PROCEDURE Neplatici
 AS
 BEGIN
 	SELECT STjmeno AS jméno,STprijmeni AS příjmení,FAnazev AS fakulta,STemail AS email FROM REF.Student,Fakulta 
 	WHERE IDStudent NOT IN (SELECT PLstudent FROM REF.Platba)
-END;*/
+END;
 -- TRIGGERY --
 -- Tabulky pro Triggery
 CREATE TABLE Vylouceni_Studenti
@@ -325,3 +321,48 @@ FOR UPDATE AS
 begin
 	INSERT INTO Updated_Student SELECT IDStudent,STjmeno,STprijmeni,STrodne_cislo,STadresa,STmesto,STpsc,STfakulta,GETDATE() FROM DELETED 
 end;
+GO
+-- Trigger pro Vyučujícího
+CREATE Trigger Vlozeni_terminu
+ON Termin
+FOR INSERT,UPDATE,DELETE
+AS
+BEGIN
+	PRINT ('ZMĚNY BYLY PROVEDENY')
+END
+GO
+CREATE Trigger Vlozeni_hodnoceni
+ON Hodnoceni
+FOR INSERT,UPDATE,DELETE
+AS
+BEGIN
+	PRINT ('ZMĚNY BYLY PROVEDENY')
+END
+GO
+-- Trigger pro Garanta
+CREATE Trigger Vlozeni_temat
+ON Tema
+FOR INSERT,UPDATE,DELETE
+AS
+BEGIN
+	PRINT ('ZMĚNY BYLY PROVEDENY')
+END
+GO
+-- Pohled Student
+CREATE VIEW Student_zapocet_pohled
+AS
+SELECT STjmeno+' '+STprijmeni as 'Jméno studenta', ZAPpredmet as 'Předmět', ZAPbody as 'Body', VYjmeno+' '+VYprijmeni as 'Jméno vyuřujícího'
+FROM REF.Student,Vyucujici,Predmet,Zapocet
+-- SELECT * FROM Student_zapocet_pohled
+-- Pohled Vyučující
+CREATE VIEW Vyucujici_pohled
+AS
+SELECT VYtitul_pred as 'Titul', VYjmeno+' '+VYprijmeni as 'Jméno vyučujícího', PDnazev as 'Předmět'
+FROM Vyucujici,Predmet
+-- SELECT * FROM Vyucujici_pohled
+-- Pohled Garant
+CREATE VIEW Garant_pohled
+AS
+SELECT GAtitul_pred AS 'Titul před', GAjmeno AS 'Jméno', GAprijmeni AS 'Příjmení', GAtitul_za AS 'Titul za',GAfakulta AS 'Fakulta',GAustav AS 'Ústav'
+FROM Garant
+-- SELECT * FROM Garant_pohled
